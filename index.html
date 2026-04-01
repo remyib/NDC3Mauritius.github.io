@@ -2084,7 +2084,12 @@ function renderDetail(){
     head.className='dhead';
     head.innerHTML=`
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-        <span style="font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 10px;border-radius:10px;background:${colDim};color:${col};border:1px solid ${colLine}">${d.code}</span>
+        <input value="${(d.code||'').replace(/"/g,'&quot;')}"
+          onchange="efInv(${live.id},'code',this.value.trim())"
+          title="Edit reference code"
+          style="font-family:var(--mono);font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;background:${colDim};color:${col};border:1px solid ${colLine};outline:none;cursor:text;min-width:60px;max-width:120px;transition:border-color 0.15s"
+          onfocus="this.style.borderColor='${col}';this.style.background='${colDim}'"
+          onblur="this.style.borderColor='${colLine}'">
         <span style="font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#64748b">${lv}</span>
       </div>
       <input value="${(d.title||'').replace(/"/g,'&quot;')}" onchange="efInv(${live.id},'title',this.value)"
