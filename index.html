@@ -7,34 +7,34 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
-  /* ── Light surface scale ── */
-  --ink:   #f5f6fa;   /* page background — off-white */
-  --ink2:  #ffffff;   /* panel / card background */
-  --ink3:  #f0f1f6;   /* subtle inset / input bg */
-  --ink4:  #e8eaf2;   /* deepest inset */
-  --line:  #dde0ec;   /* default border */
-  --line2: #c8cce0;   /* stronger border */
-  --fog:   #8890b0;   /* muted label text */
-  --mist:  #6068a0;   /* mid-tone text */
-  --ghost: #2e3460;   /* body text */
-  --paper: #1a1f4a;   /* dark contrast (reversed) */
-  --white: #111840;   /* "darkest" text — headings */
+  /* ── Dark surface scale ── */
+  --ink:   #0f1117;   /* page background */
+  --ink2:  #161b27;   /* panel / card background */
+  --ink3:  #1e2535;   /* subtle inset / input bg */
+  --ink4:  #252d40;   /* deepest inset */
+  --line:  #2a3348;   /* default border */
+  --line2: #3a4560;   /* stronger border */
+  --fog:   #7888b0;   /* muted label text — readable on dark */
+  --mist:  #a0aed0;   /* mid-tone text */
+  --ghost: #c8d4f0;   /* body text */
+  --paper: #e8edf8;   /* light contrast (reversed) */
+  --white: #f4f8ff;   /* brightest text — headings */
 
-  /* ── Accent colours — shifted darker/richer for legibility on white ── */
-  --goal:   hsl(213, 80%, 46%);
-  --action: hsl(155, 65%, 36%);
-  --invest: hsl(36,  88%, 42%);
-  --reform: hsl(335, 68%, 48%);
+  /* ── Accent colours — bright for legibility on dark ── */
+  --goal:   hsl(213, 90%, 65%);
+  --action: hsl(155, 70%, 52%);
+  --invest: hsl(36,  95%, 62%);
+  --reform: hsl(335, 80%, 68%);
 
-  --goal-dim:   hsla(213,80%,46%,0.09);
-  --action-dim: hsla(155,65%,36%,0.09);
-  --invest-dim: hsla(36, 88%,42%,0.09);
-  --reform-dim: hsla(335,68%,48%,0.09);
+  --goal-dim:   hsla(213,90%,65%,0.12);
+  --action-dim: hsla(155,70%,52%,0.12);
+  --invest-dim: hsla(36, 95%,62%,0.12);
+  --reform-dim: hsla(335,80%,68%,0.12);
 
-  --goal-line:   hsla(213,80%,46%,0.28);
-  --action-line: hsla(155,65%,36%,0.28);
-  --invest-line: hsla(36, 88%,42%,0.28);
-  --reform-line: hsla(335,68%,48%,0.28);
+  --goal-line:   hsla(213,90%,65%,0.30);
+  --action-line: hsla(155,70%,52%,0.30);
+  --invest-line: hsla(36, 95%,62%,0.30);
+  --reform-line: hsla(335,80%,68%,0.30);
 
   --serif: 'Cormorant Garamond', serif;
   --mono: 'DM Mono', monospace;
@@ -74,8 +74,8 @@ body::after {
 .hbtn {
   display:flex; align-items:center; gap:6px;
   padding:6px 13px; border-radius:var(--r);
-  font-family:var(--mono); font-size:10px; font-weight:500; letter-spacing:0.06em;
-  background:transparent; border:1px solid var(--line); color:var(--fog);
+  font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:0.06em;
+  background:transparent; border:1px solid var(--line); color:var(--mist);
   cursor:pointer; transition:all 0.15s; white-space:nowrap;
 }
 .hbtn:hover { background:var(--ink3); border-color:var(--line2); color:var(--ghost); }
@@ -88,28 +88,32 @@ body::after {
 .hbtn.i:hover { background:var(--invest-dim); }
 .hbtn.r:hover { background:var(--reform-dim); }
 .hbtn .ic { font-size:14px; line-height:1; }
-.vsw { padding:4px 10px; font-family:var(--mono); font-size:9px; font-weight:600; letter-spacing:0.06em; color:var(--fog); background:transparent; border:1px solid transparent; border-radius:5px; cursor:pointer; transition:all 0.15s; }
+.vsw { padding:4px 10px; font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:0.06em; color:var(--mist); background:transparent; border:1px solid transparent; border-radius:5px; cursor:pointer; transition:all 0.15s; }
 .vsw:hover { color:var(--white); background:var(--ink4); border-color:var(--line2); }
 .vsw.on { background:#e8f0ff; color:#0f2a6e !important; border-color:#93b4f0; font-weight:700; }
 /* ── SHELL ── */
 .shell { display:flex; flex:1; min-height:0; overflow:hidden; }
 /* ── LEFT RAIL ── */
-.lrail { width:256px; flex-shrink:0; background:var(--ink2); border-right:1px solid var(--line); display:flex; flex-direction:column; min-height:0; overflow:clip; }
-.lrail-scroll { flex:1; min-height:0; overflow-y:scroll; }
-.rsec { border-bottom:1px solid var(--line); }
+.lrail { width:256px; flex-shrink:0; background:var(--ink2); border-right:1px solid var(--line); display:flex; flex-direction:column; min-height:0; overflow:hidden; }
+.lrail-scroll { flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; }
+.rsec { display:flex; flex-direction:column; min-height:0; flex:1; border-bottom:1px solid var(--line); }
 .rsec-head {
   display:flex; align-items:center; justify-content:space-between;
-  padding:10px 16px; user-select:none;
+  padding:8px 14px; user-select:none; flex-shrink:0;
+  cursor:pointer;
 }
+.rsec-head:hover { background:var(--ink3); }
 .rsec-left { display:flex; align-items:center; gap:9px; }
 .rdot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
-.rlbl { font-family:var(--mono); font-size:9px; font-weight:500; letter-spacing:0.18em; text-transform:uppercase; }
-.rcnt { font-family:var(--mono); font-size:9px; background:var(--ink4); border:1px solid var(--line); border-radius:10px; padding:1px 7px; color:var(--fog); }
-.rlist { display:block; padding:4px 0 6px; }
+.rlbl { font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:var(--ghost); }
+.rcnt { font-family:var(--mono); font-size:9px; font-weight:600; background:var(--ink4); border:1px solid var(--line); border-radius:10px; padding:1px 7px; color:var(--mist); }
+.rlist { overflow-y:auto; flex:1; min-height:60px; max-height:200px; padding:4px 0 4px; }
+.rlist::-webkit-scrollbar { width:4px; }
+.rlist::-webkit-scrollbar-thumb { background:var(--line2); border-radius:2px; }
 .ri {
   display:flex; align-items:center; gap:8px;
   padding:5px 14px 5px 30px; cursor:pointer;
-  font-family:var(--mono); font-size:11px; color:var(--mist);
+  font-family:var(--mono); font-size:12px; color:var(--ghost);
   transition:all 0.1s; position:relative;
 }
 .ri::before { content:''; position:absolute; left:20px; width:5px; height:1px; background:var(--line2); }
@@ -117,7 +121,7 @@ body::after {
 .ri.sel { color:var(--white); background:var(--goal-dim); }
 .ri-code { font-size:9px; font-weight:500; padding:1px 6px; border-radius:3px; flex-shrink:0; }
 .ri-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.radd { display:flex; align-items:center; gap:6px; padding:5px 14px 5px 30px; font-family:var(--mono); font-size:9px; color:var(--fog); cursor:pointer; transition:all 0.1s; letter-spacing:0.05em; }
+.radd { display:flex; align-items:center; gap:6px; padding:5px 14px 5px 30px; font-family:var(--mono); font-size:10px; color:var(--mist); cursor:pointer; transition:all 0.1s; letter-spacing:0.05em; }
 .radd:hover { color:var(--ghost); }
 /* ── MAIN ── */
 .main { flex:1; display:flex; flex-direction:column; min-height:0; min-width:0; overflow-x:auto; overflow-y:hidden; }
@@ -135,8 +139,8 @@ body::after {
 .dtitle { font-family:var(--serif); font-size:19px; font-style:italic; color:var(--white); line-height:1.25; }
 .dbody { flex:1; min-height:0; overflow-y:scroll; padding:14px 18px; }
 .dfld { margin-bottom:14px; }
-.dflbl { font-family:var(--mono); font-size:8px; letter-spacing:0.18em; text-transform:uppercase; color:var(--fog); margin-bottom:5px; }
-.dfin { width:100%; background:var(--ink3); border:1px solid var(--line); border-radius:var(--r); padding:8px 11px; font-family:var(--mono); font-size:11px; color:var(--ghost); outline:none; transition:border-color 0.15s; }
+.dflbl { font-family:var(--mono); font-size:9px; font-weight:600; letter-spacing:0.16em; text-transform:uppercase; color:var(--mist); margin-bottom:5px; }
+.dfin { width:100%; background:var(--ink3); border:1px solid var(--line); border-radius:var(--r); padding:8px 11px; font-family:var(--mono); font-size:12px; color:var(--white); outline:none; transition:border-color 0.15s; }
 .dfin:focus { border-color:var(--goal); color:var(--white); background:var(--ink2); }
 .dfin.ta { resize:vertical; min-height:68px; font-family:var(--sans); font-size:12px; line-height:1.55; }
 select.dfin { cursor:pointer; }
@@ -147,7 +151,7 @@ select.dfin option { background:var(--ink2); color:var(--ghost); }
 .dab:hover { color:var(--ghost); border-color:var(--line2); }
 .dab.red { color:var(--reform); border-color:var(--reform-line); }
 .dab.red:hover { background:var(--reform-dim); }
-.dempty { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:var(--fog); font-family:var(--mono); font-size:11px; text-align:center; padding:20px; }
+.dempty { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:var(--mist); font-family:var(--mono); font-size:12px; text-align:center; padding:20px; }
 .dempty .big { font-size:36px; opacity:0.15; margin-bottom:4px; }
 /* ── HIERARCHY ── */
 .sector-blk { margin-bottom:16px; }
@@ -165,13 +169,13 @@ to{opacity:1;transform:translateY(0)}
 .sector-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--goal); }
 .sector-card:hover { border-color:var(--goal); box-shadow:0 0 0 1px var(--goal-dim), 0 6px 24px rgba(60,80,160,0.10); }
 .lbadge { flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:3px; }
-.lcode { font-family:var(--mono); font-size:11px; font-weight:500; padding:3px 10px; border-radius:4px; letter-spacing:0.05em; }
-.ltype { font-family:var(--mono); font-size:7px; letter-spacing:0.18em; text-transform:uppercase; color:var(--fog); }
+.lcode { font-family:var(--mono); font-size:12px; font-weight:700; padding:3px 10px; border-radius:4px; letter-spacing:0.05em; }
+.ltype { font-family:var(--mono); font-size:9px; font-weight:600; letter-spacing:0.16em; text-transform:uppercase; color:var(--mist); }
 .cbody { flex:1; min-width:0; }
-.ctitle { font-family:var(--serif); font-size:16px; font-weight:400; font-style:italic; color:var(--white); line-height:1.2; margin-bottom:4px; }
-.cdesc { font-family:var(--sans); font-size:10px; color:var(--fog); line-height:1.5; }
+.ctitle { font-family:var(--serif); font-size:18px; font-weight:600; font-style:italic; color:var(--white); line-height:1.2; margin-bottom:4px; }
+.cdesc { font-family:var(--sans); font-size:11px; color:var(--ghost); line-height:1.5; }
 .cmeta { display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0; }
-.mpill { font-family:var(--mono); font-size:8px; font-weight:500; letter-spacing:0.06em; padding:2px 7px; border-radius:12px; }
+.mpill { font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:0.05em; padding:2px 8px; border-radius:12px; }
 .pring { position:relative; width:30px; height:30px; }
 .pring svg { transform:rotate(-90deg); }
 .pring .pbg { stroke:var(--line2); }
@@ -192,8 +196,8 @@ to{opacity:1;transform:translateY(0)}
 }
 .act-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:2px; background:var(--action); }
 .act-card:hover { border-color:var(--action); background:var(--ink3); box-shadow:0 2px 12px rgba(30,120,80,0.08); }
-.act-title { font-family:var(--serif); font-size:13px; font-style:italic; color:var(--white); margin-bottom:3px; }
-.act-desc { font-family:var(--sans); font-size:10px; color:var(--fog); }
+.act-title { font-family:var(--serif); font-size:14px; font-weight:500; font-style:italic; color:var(--white); margin-bottom:3px; }
+.act-desc { font-family:var(--sans); font-size:11px; color:var(--ghost); }
 .act-ch { padding-left:12px; position:relative; display:none; margin-top:5px; }
 .act-ch.open { display:block; }
 .act-ch::before { content:''; position:absolute; left:7px; top:0; bottom:18px; width:1px; background:linear-gradient(to bottom, var(--action-line), transparent); }
@@ -208,27 +212,31 @@ to{opacity:1;transform:translateY(0)}
 }
 .inv-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:2px; background:var(--invest); }
 .inv-card:hover { border-color:var(--invest); background:var(--ink4); }
-.inv-title { font-family:var(--serif); font-size:12px; font-style:italic; color:var(--ghost); margin-bottom:3px; }
-.inv-desc { font-family:var(--sans); font-size:9px; color:var(--fog); }
+.inv-title { font-family:var(--serif); font-size:13px; font-style:italic; color:var(--white); margin-bottom:3px; }
+.inv-desc { font-family:var(--sans); font-size:10px; color:var(--ghost); }
 .inv-ch { padding-left:10px; position:relative; display:none; margin-top:4px; }
 .inv-ch.open { display:block; }
 .inv-ch::before { content:''; position:absolute; left:6px; top:0; bottom:14px; width:1px; background:linear-gradient(to bottom, var(--invest-line), transparent); }
 /* REFORM */
-.ref-blk { margin:3px 0; }
+.ref-blk { margin:4px 0; }
+@keyframes navFlash {
+  0%   { box-shadow: 0 0 0 0 rgba(99,149,255,0); }
+  25%  { box-shadow: 0 0 0 4px rgba(99,149,255,0.55); }
+  100% { box-shadow: 0 0 0 0 rgba(99,149,255,0); }
+}
 .nav-flash { animation: navFlash 0.85s ease both !important; }
-0%   { box-shadow: 0 0 0 0 rgba(99,149,255,0); }
-25%  { box-shadow: 0 0 0 4px rgba(99,149,255,0.55); }
-100% { box-shadow: 0 0 0 0 rgba(99,149,255,0); }
 .ref-card {
-  display:flex; align-items:center; gap:7px;
-  padding:5px 9px;
-  background:var(--ink4); border:1px solid var(--reform-line);
+  display:flex; align-items:flex-start; gap:8px;
+  padding:7px 10px;
+  background:var(--ink3); border:1px solid var(--reform-line);
   border-radius:var(--r); cursor:pointer; transition:all 0.15s;
   position:relative; overflow:hidden;
 }
 .ref-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:2px; background:var(--reform); }
-.ref-card:hover { border-color:var(--reform); background:var(--ink3); }
-.ref-title { font-family:var(--serif); font-size:11px; font-style:italic; flex:1; color:var(--ghost); }
+.ref-card:hover { border-color:var(--reform); background:var(--ink4); }
+.ref-card-body { flex:1; min-width:0; }
+.ref-title { font-family:var(--serif); font-size:14px; font-weight:500; font-style:italic; color:var(--white); line-height:1.3; margin-bottom:3px; display:block; }
+.ref-meta { display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
 /* add child btn */
 .add-child-btn {
   display:inline-flex; align-items:center; gap:6px;
@@ -250,12 +258,12 @@ table { width:100%; border-collapse:collapse; }
 thead { position:sticky; top:0; z-index:10; }
 thead tr { background:var(--ink3); border-bottom:2px solid var(--line2); }
 th { padding:0; }
-.thi { display:flex; align-items:center; gap:6px; padding:11px 15px; cursor:pointer; font-family:var(--mono); font-size:9px; font-weight:500; letter-spacing:0.14em; text-transform:uppercase; color:var(--fog); transition:all 0.1s; white-space:nowrap; }
+.thi { display:flex; align-items:center; gap:6px; padding:11px 15px; cursor:pointer; font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--mist); transition:all 0.1s; white-space:nowrap; }
 .thi:hover { background:var(--ink4); color:var(--ghost); }
 tbody tr { border-bottom:1px solid var(--line); transition:background 0.08s; cursor:pointer; }
 tbody tr:hover { background:var(--ink3); }
 tbody tr.tsel { background:var(--goal-dim); border-left:2px solid var(--goal); }
-td { padding:10px 15px; font-family:var(--mono); font-size:11px; color:var(--fog); max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+td { padding:10px 15px; font-family:var(--mono); font-size:11px; color:var(--ghost); max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .lchip { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:3px; font-family:var(--mono); font-size:9px; font-weight:500; letter-spacing:0.08em; }
 /* ── OVERVIEW ── */
 .ov-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:28px; }
@@ -271,9 +279,9 @@ td { padding:10px 15px; font-family:var(--mono); font-size:11px; color:var(--fog
 .ov-card-i::after { background:var(--invest); }
 .ov-card-r::after { background:var(--reform); }
 .ov-n { font-family:var(--sans); font-size:32px; font-weight:800; line-height:1; font-feature-settings:'tnum'; }
-.ov-l { font-family:var(--mono); font-size:9px; letter-spacing:0.18em; text-transform:uppercase; color:var(--fog); margin-top:4px; }
-.ov-s { font-family:var(--sans); font-size:10px; color:var(--fog); margin-top:5px; }
-.ov-stitle { font-family:var(--sans); font-size:11px; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:var(--ghost); margin:24px 0 12px; display:flex; align-items:center; gap:10px; }
+.ov-l { font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--mist); margin-top:4px; }
+.ov-s { font-family:var(--sans); font-size:11px; color:var(--ghost); margin-top:5px; }
+.ov-stitle { font-family:var(--sans); font-size:11px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--white); margin:24px 0 12px; display:flex; align-items:center; gap:10px; }
 .ov-stitle::after { content:''; flex:1; height:1px; background:var(--line); }
 .ov-row {
   display:flex; align-items:center; gap:12px;
@@ -282,7 +290,7 @@ td { padding:10px 15px; font-family:var(--mono); font-size:11px; color:var(--fog
 }
 .ov-row:hover { border-color:var(--line2); background:var(--ink3); }
 .ov-rcode { font-family:var(--mono); font-size:10px; font-weight:500; min-width:44px; }
-.ov-rtitle { font-family:var(--serif); font-size:15px; font-style:italic; flex:1; color:var(--ghost); }
+.ov-rtitle { font-family:var(--serif); font-size:15px; font-style:italic; flex:1; color:var(--white); }
 .ov-rbar { width:60px; height:4px; background:var(--ink4); border-radius:2px; overflow:hidden; }
 .ov-rfill { height:100%; border-radius:2px; }
 /* ── DETAIL PANEL ── */
@@ -296,7 +304,7 @@ td { padding:10px 15px; font-family:var(--mono); font-size:11px; color:var(--fog
 .mclose:hover { color:var(--ghost); border-color:var(--line2); background:var(--ink4); }
 .mft { padding:12px 18px; border-top:1px solid var(--line); display:flex; justify-content:flex-end; gap:8px; }
 /* ── STATUS BAR ── */
-.sbar { height:24px; display:flex; align-items:center; gap:14px; padding:0 18px; background:var(--ink2); border-top:1px solid var(--line); font-family:var(--mono); font-size:9px; color:var(--fog); flex-shrink:0; letter-spacing:0.07em; min-width:900px; }
+.sbar { height:24px; display:flex; align-items:center; gap:14px; padding:0 18px; background:var(--ink2); border-top:1px solid var(--line); font-family:var(--mono); font-size:10px; color:var(--mist); flex-shrink:0; letter-spacing:0.07em; min-width:900px; }
 .sdot { width:5px; height:5px; border-radius:50%; background:var(--action); animation:lpulse 2s infinite; }
 .ssep { width:1px; height:12px; background:var(--line); }
 /* ── TOAST ── */
@@ -943,11 +951,19 @@ function reformHtml(r) {
   const invs=chInvests(r.code);
   return `<div class="ref-blk">
     <div class="ref-card" onclick="toggleChildren('rc-${r.id}',${r.id})">
-      <span class="lcode" style="background:var(--reform-dim);color:var(--reform);font-size:9px">${r.code}</span>
-      <span class="ref-title">${r.title}</span>
-      ${costBadge(r)}${ghgBadge(r)}
-      <span class="mpill" style="background:var(--reform-dim);color:${STATUS_COLOR(r.status)};margin-left:4px">${r.status}</span>
-      ${invs.length?`<span class="mpill" style="background:var(--invest-dim);color:var(--invest);font-size:8px;margin-left:4px">${invs.length}I</span>`:''}
+      <div class="lbadge">
+        <span class="lcode" style="background:var(--reform-dim);color:var(--reform)">${r.code}</span>
+        <span class="ltype">REFORM</span>
+      </div>
+      <div class="ref-card-body">
+        <span class="ref-title">${r.title}</span>
+        ${r.source?`<div style="font-family:var(--mono);font-size:9px;color:var(--fog);margin-bottom:3px">📄 ${r.source}</div>`:''}
+        <div class="ref-meta">
+          ${costBadge(r)}${ghgBadge(r)}
+          <span class="mpill" style="background:var(--reform-dim);color:${STATUS_COLOR(r.status)}">${r.status}</span>
+          ${invs.length?`<span class="mpill" style="background:var(--invest-dim);color:var(--invest);font-size:8px">${invs.length} inv.</span>`:''}
+        </div>
+      </div>
     </div>
     <div class="inv-ch" id="rc-${r.id}" style="padding-left:14px">
       <div style="padding:6px 0 2px" onclick="event.stopPropagation()">
@@ -970,6 +986,7 @@ function investHtml(inv) {
       </div>
       <div class="cbody">
         <div class="inv-title">${inv.title}</div>
+        ${inv.source?`<div style="font-family:var(--mono);font-size:9px;color:var(--fog);margin-bottom:2px;font-style:normal">📄 ${inv.source}</div>`:''}
         <div class="inv-desc">${inv.desc||''}</div>
         <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">
           ${costBadge(inv)}${ghgBadge(inv)}
@@ -1050,40 +1067,81 @@ function refreshFinance(id){
 }
 
 // ── RAIL ───────────────────────────────────────────────────────────────
+// ── CODE SORT ─────────────────────────────────────────────────────────────
+// Parses codes like S1, A1.2, R1.2a, I14.3b into sortable segments
+function codeSort(a, b){
+  const parse = code => {
+    // Split off leading letter(s), then numbers separated by dots, then trailing letter
+    const m = (code||'').match(/^([A-Za-z]+)([\d.]+)([a-z]?)$/);
+    if(!m) return [code];
+    const nums = m[2].split('.').map(Number);
+    const trail = m[3] ? m[3].charCodeAt(0) : 0;
+    return [m[1], ...nums, trail];
+  };
+  const pa = parse(a.code||'');
+  const pb = parse(b.code||'');
+  for(let i=0; i<Math.max(pa.length,pb.length); i++){
+    const av = pa[i] ?? 0;
+    const bv = pb[i] ?? 0;
+    if(av < bv) return -1;
+    if(av > bv) return  1;
+  }
+  return 0;
+}
+
 function renderRail(){
   const container=document.getElementById('lrail'); if(!container) return;
   const q=railSearch;
-  container.innerHTML=LV.map(lv=>{
-    const allItems=byLevel(lv);
-    const items=q?allItems.filter(it=>(it.title||'').toLowerCase().includes(q)||(it.code||'').toLowerCase().includes(q)||(it.owner||'').toLowerCase().includes(q)):allItems;
-    // When searching, hide sections with no results entirely
-    if(q&&items.length===0) return '';
+
+  // Summary bar when searching
+  const total = q ? LV.reduce((s,lv)=>s+byLevel(lv).filter(it=>
+    (it.title||'').toLowerCase().includes(q)||(it.code||'').toLowerCase().includes(q)
+  ).length, 0) : 0;
+
+  const summaryHtml = q
+    ? `<div style="padding:5px 12px;font-family:var(--mono);font-size:9px;color:var(--mist);border-bottom:1px solid var(--line);background:var(--ink3);flex-shrink:0">${total} result${total!==1?'s':''} for "<strong>${q}</strong>"</div>`
+    : '';
+
+  const hl = (str) => {
+    if(!q) return str;
+    const lo=str.toLowerCase(), qi=lo.indexOf(q);
+    if(qi<0) return str;
+    return str.slice(0,qi)
+      + '<mark style="background:hsla(50,100%,60%,0.4);border-radius:2px;padding:0 1px">'
+      + str.slice(qi, qi+q.length)
+      + '</mark>'
+      + str.slice(qi+q.length);
+  };
+
+  const sectionsHtml = LV.map(lv=>{
+    const allItems = byLevel(lv).sort(codeSort);
+    const items = q
+      ? allItems.filter(it=>(it.title||'').toLowerCase().includes(q)||(it.code||'').toLowerCase().includes(q)||(it.owner||'').toLowerCase().includes(q))
+      : allItems;
+    if(q && items.length===0) return '';
+
+    const rows = items.map(it=>`
+      <div class="ri ${sel?.id===it.id?'sel':''}" onclick="navigateTo(${it.id})">
+        <span class="ri-code" style="background:${DIM[lv]};color:${COL[lv]}">${hl(it.code||'')}</span>
+        <span class="ri-name">${hl(it.title||'')}</span>
+      </div>`).join('');
+
+    const addBtn = q ? '' : `<div class="radd" onclick="openAdd('${lv}')"><span style="color:${COL[lv]}">＋</span> Add ${LBL[lv]}</div>`;
+    const cnt = q ? `${items.length}/${allItems.length}` : allItems.length;
+
     return `<div class="rsec" id="rsec-${lv}">
       <div class="rsec-head">
-        <div class="rsec-left"><div class="rdot" style="background:${COL[lv]}"></div><span class="rlbl" style="color:${COL[lv]}">${LBL[lv]}s</span></div>
-        <span class="rcnt">${q?items.length+'/'+allItems.length:allItems.length}</span>
+        <div class="rsec-left">
+          <div class="rdot" style="background:${COL[lv]}"></div>
+          <span class="rlbl" style="color:${COL[lv]}">${LBL[lv]}s</span>
+        </div>
+        <span class="rcnt">${cnt}</span>
       </div>
-      <div class="rlist" id="rs-${lv}">
-        ${items.map(it=>{
-          const title=it.title||'';
-          const code=it.code||'';
-          // Highlight matching text in search results
-          const hl=(str)=>{ if(!q) return str; const lo=str.toLowerCase(),qi=lo.indexOf(q); if(qi<0) return str; return str.slice(0,qi)+'<mark style="background:hsla(50,100%,60%,0.35);border-radius:2px;padding:0 1px">'+str.slice(qi,qi+q.length)+'</mark>'+str.slice(qi+q.length); };
-          return `<div class="ri ${sel?.id===it.id?'sel':''}" onclick="navigateTo(${it.id})">
-            <span class="ri-code" style="background:${DIM[lv]};color:${COL[lv]}">${hl(code)}</span>
-            <span class="ri-name">${hl(title)}</span>
-          </div>`;
-        }).join('')}
-        ${!q?`<div class="radd" onclick="openAdd('${lv}')"><span style="color:${COL[lv]}">＋</span> Add ${LBL[lv]}</div>`:''}
-      </div>
+      <div class="rlist" id="rs-${lv}">${rows}${addBtn}</div>
     </div>`;
   }).join('');
-  // When searching, show a summary at top
-  if(q){
-    const total=LV.reduce((s,lv)=>s+byLevel(lv).filter(it=>(it.title||'').toLowerCase().includes(q)||(it.code||'').toLowerCase().includes(q)).length,0);
-    const summary=`<div style="padding:6px 12px;font-family:var(--mono);font-size:9px;color:var(--mist);border-bottom:1px solid var(--line);background:var(--ink3)">${total} result${total!==1?'s':''} for "${q}"</div>`;
-    container.innerHTML=summary+container.innerHTML;
-  }
+
+  container.innerHTML = summaryHtml + sectionsHtml;
 }
 
 function filterRail(raw){
@@ -2016,15 +2074,6 @@ function renderDetail(){
     </div>`;
 
   try {
-    // Build the save-bar HTML (sticky footer inside drail)
-    const saveBar=`
-      <div id="drail-savebar" style="flex-shrink:0;padding:10px 14px;border-top:2px solid ${dirty?'var(--goal-line)':'var(--line)'};background:var(--ink2);display:flex;gap:8px;align-items:center;transition:border-color 0.2s">
-        <span id="dirty-badge" style="font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:4px;background:rgba(245,158,11,0.15);color:#f59e0b;display:${dirty?'':'none'}">● unsaved</span>
-        <div style="flex:1"></div>
-        <button onclick="discardItem()" style="padding:7px 12px;background:var(--ink3);border:1px solid var(--line);border-radius:6px;font-family:var(--mono);font-size:9px;color:#64748b;cursor:pointer">✕ Discard</button>
-        <button onclick="saveItem()" style="padding:7px 16px;background:var(--goal-dim);border:1px solid var(--goal-line);border-radius:6px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.06em;color:var(--goal);cursor:pointer">✓ Save</button>
-      </div>`;
-
     // We rebuild drail structure directly
     el.innerHTML='';
     el.style.display='flex';
@@ -2050,6 +2099,17 @@ function renderDetail(){
     body.innerHTML=`
 
       ${sec('⚙','Identity & Status','#94a3b8',`
+        ${(()=>{
+          const parentLevel={action:'sector',reform:'action',investment:'action'}[lv]||null;
+          if(!parentLevel) return '';
+          const candidates=byLevel(parentLevel);
+          return lbl('Parent '+LBL[parentLevel],'#94a3b8')
+            + '<select class="dfin" style="margin-bottom:10px" onchange="efInv('+live.id+',\'parent\',this.value||null)">'
+            + '<option value="">— None —</option>'
+            + candidates.map(p=>'<option value="'+p.code+'" '+(d.parent===p.code?'selected':'')+'>'
+              +p.code+' — '+p.title+'</option>').join('')
+            + '</select>';
+        })()}
         ${lbl('Status','#94a3b8')}
         <select class="dfin" style="margin-bottom:10px" onchange="efInv(${live.id},'status',this.value)">
           ${['Draft','On Hold','In Progress','Active','Complete'].map(s=>`<option value="${s}" ${d.status===s?'selected':''}>${s}</option>`).join('')}
@@ -2057,7 +2117,8 @@ function renderDetail(){
         ${lbl('Owner','#94a3b8')}
         <input class="dfin" style="margin-bottom:10px" value="${d.owner||''}" onchange="efInv(${live.id},'owner',this.value)">
         ${(lv==='sector'||lv==='action')?`${lbl('Progress %','#94a3b8')}<input class="dfin" type="number" min="0" max="100" value="${d.progress||0}" onchange="efInv(${live.id},'progress',parseInt(this.value)||0)">`:``}
-        ${inv?`${lbl('Public Owner / Implementing Agency','#94a3b8')}<input class="dfin" placeholder="Ministry / Department" value="${d.publicOwner||''}" onchange="efInv(${live.id},'publicOwner',this.value)">`:``}
+        ${inv?`${lbl('Public Owner / Implementing Agency','#94a3b8')}<input class="dfin" style="margin-bottom:10px" placeholder="Ministry / Department" value="${d.publicOwner||''}" onchange="efInv(${live.id},'publicOwner',this.value)">`:``}
+        ${(inv||ref)?`${lbl('Source / Reference','#94a3b8')}<input class="dfin" placeholder="e.g. NDC 3.0 Strategy, Chapter 4" value="${d.source||''}" onchange="efInv(${live.id},'source',this.value)">`:``}
       `)}
 
       ${(inv||ref)?sec('💰','Cost & Timeline','#60a5fa',`
@@ -2123,11 +2184,13 @@ function renderDetail(){
     // ── Save bar (sticky footer) ────────────────────────────────────
     const footer=document.createElement('div');
     footer.id='drail-savebar';
-    footer.style.cssText=`flex-shrink:0;padding:10px 14px;border-top:2px solid ${dirty?'var(--goal-line)':'var(--line)'};background:var(--ink2);display:flex;gap:8px;align-items:center;transition:border-color 0.2s`;
+    footer.style.cssText='flex-shrink:0;padding:11px 14px;border-top:2px solid '+(dirty?'var(--goal-line)':'var(--line)')+';background:var(--ink2);display:flex;gap:8px;align-items:center;transition:border-color 0.2s';
     footer.innerHTML=`
-      <span id="dirty-badge" style="font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:4px;background:rgba(245,158,11,0.15);color:#f59e0b;display:${dirty?'flex':'none'};align-items:center;gap:4px">● unsaved</span>
-      <div style="flex:1"></div>
-      <button onclick="discardItem()" style="padding:7px 12px;background:var(--ink3);border:1px solid var(--line);border-radius:6px;font-family:var(--mono);font-size:9px;color:#64748b;cursor:pointer;transition:color 0.15s" onmouseenter="this.style.color='var(--white)'" onmouseleave="this.style.color='#64748b'">✕ Discard</button>
+      <div style="flex:1">
+        <div style="font-family:var(--mono);font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:var(--fog)">${LBL[lv]}</div>
+        <span id="dirty-badge" style="font-family:var(--mono);font-size:9px;color:#f59e0b;display:${dirty?'block':'none'}">● unsaved changes</span>
+      </div>
+      <button onclick="discardItem()" style="padding:7px 12px;background:var(--ink3);border:1px solid var(--line);border-radius:6px;font-family:var(--mono);font-size:9px;color:var(--fog);cursor:pointer;transition:color 0.15s" onmouseenter="this.style.color='var(--white)'" onmouseleave="this.style.color='var(--fog)'">✕ Discard</button>
       <button onclick="saveItem()" style="padding:7px 18px;background:var(--goal-dim);border:1px solid var(--goal-line);border-radius:6px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.06em;color:var(--goal);cursor:pointer;transition:background 0.15s" onmouseenter="this.style.background='rgba(74,222,128,0.2)'" onmouseleave="this.style.background='var(--goal-dim)'">✓ Save</button>`;
     el.appendChild(footer);
 
@@ -2137,26 +2200,71 @@ function renderDetail(){
 }
 
 // ── ADD / DELETE ────────────────────────────────────────────────────────
-function autoCode(lv,parent){
-  const prefix={'sector':'S','action':'A','investment':'I','reform':'R'}[lv];
-  const existing=byLevel(lv).map(d=>d.code);
-  let n=1;
-  while(existing.includes(prefix+(parent?parent.replace(/[^0-9.]/g,'')+'.'+ n:n))) n++;
-  if(lv==='sector') return 'S'+byLevel('sector').length+1;
-  if(parent){
-    const sib=ch(parent).filter(d=>d.level===lv);
-    return parent+'.'+(sib.length+1);
+function autoCode(lv, parentCode){
+  const allCodes = new Set(D.map(d=>d.code));
+
+  if(lv==='sector'){
+    // S1, S2, S3 ... next unused number
+    let n=1;
+    while(allCodes.has('S'+n)) n++;
+    return 'S'+n;
   }
-  return prefix+n;
+
+  if(lv==='action'){
+    // A{sectorNum}.{n} — parent is a sector code e.g. "S1" or "S14"
+    const sNum = parentCode ? parentCode.replace(/[^0-9]/g,'') : '?';
+    const prefix = 'A'+sNum+'.';
+    const siblings = D.filter(d=>d.level==='action'&&d.parent===parentCode);
+    let n=1;
+    while(allCodes.has(prefix+n)) n++;
+    return prefix+n;
+  }
+
+  if(lv==='reform'||lv==='investment'){
+    const pfx = lv==='reform' ? 'R' : 'I';
+    // Parent is an action code e.g. "A1.2" — extract the numeric part "1.2"
+    let numPart = '?';
+    if(parentCode){
+      // Action code format: A{sNum}.{aNum} — strip leading letter
+      numPart = parentCode.replace(/^[A-Za-z]+/,'');
+    }
+    const baseCode = pfx + numPart;
+    // Find next unused letter suffix: a, b, c, ...
+    const letters = 'abcdefghijklmnopqrstuvwxyz';
+    for(let i=0; i<letters.length; i++){
+      const candidate = baseCode + letters[i];
+      if(!allCodes.has(candidate)) return candidate;
+    }
+    return baseCode+'?'; // fallback if all letters used
+  }
+
+  return lv.charAt(0).toUpperCase()+'?';
 }
 
 function openAdd(lv,parentCode){
   const modal=document.getElementById('m-add'); if(!modal) return;
   document.getElementById('m-add-title').textContent='Add '+LBL[lv];
-  const col=COL[lv];
-  modal.querySelector('.mbody').innerHTML=`
+
+  // Determine valid parent level and candidates
+  const parentLevel = {action:'sector', reform:'action', investment:'action'}[lv] || null;
+  const parentCandidates = parentLevel ? byLevel(parentLevel) : [];
+
+  // Parent selector HTML — shown for action/reform/investment
+  const parentHtml = parentLevel ? `
+    <div class="dflbl">Parent ${LBL[parentLevel]}</div>
+    <select class="dfin" id="af-parent-sel" onchange="
+      const sel=this.value;
+      const codeEl=document.getElementById('af-code');
+      if(codeEl) codeEl.value=autoCode('${lv}', sel||undefined);
+    ">
+      <option value="">— None —</option>
+      ${parentCandidates.map(p=>`<option value="${p.code}" ${parentCode===p.code?'selected':''}>${p.code} — ${p.title}</option>`).join('')}
+    </select>` : '';
+
+  document.getElementById('m-add-body').innerHTML=`
+    ${parentHtml}
     <div class="dflbl">Code</div>
-    <input class="dfin" id="af-code" value="${autoCode(lv,parentCode)}" placeholder="e.g. S1 / A1.1 / R1.1a1 / I1.1a">
+    <input class="dfin" id="af-code" value="${autoCode(lv,parentCode)}" placeholder="e.g. S1 / A1.1 / I1.1a">
     <div class="dflbl">Title</div>
     <input class="dfin" id="af-title" placeholder="Short descriptive title">
     <div class="dflbl">Description</div>
@@ -2168,6 +2276,8 @@ function openAdd(lv,parentCode){
     <div class="dflbl">Owner</div>
     <input class="dfin" id="af-owner" placeholder="Ministry / Department">
     ${lv==='investment'||lv==='reform'?`
+    <div class="dflbl">Source / Reference</div>
+    <input class="dfin" id="af-source" placeholder="e.g. NDC 3.0 Strategy, Chapter 4">
     <div class="dflbl">Cost (USD M)</div>
     <input class="dfin" type="number" id="af-cost" min="0" step="0.1" placeholder="0">
     `:''}
@@ -2181,7 +2291,6 @@ function openAdd(lv,parentCode){
     <label style="display:flex;align-items:center;gap:8px;margin:8px 0;font-family:var(--mono);font-size:9px;color:var(--fog);cursor:pointer"><input type="checkbox" id="af-private"> Private sector investment</label>
     `:''}
     <input type="hidden" id="af-lv" value="${lv}">
-    <input type="hidden" id="af-parent" value="${parentCode||''}">
   `;
   modal.classList.add('on');
   setTimeout(()=>document.getElementById('af-title')?.focus(),50);
@@ -2195,14 +2304,19 @@ function confirmAdd(){
   if(D.find(d=>d.code===c)){alert('Code "'+c+'" already exists');return;}
   const s=document.getElementById('af-status')?.value||'Draft';
   const o=document.getElementById('af-owner')?.value.trim()||'';
-  const p=document.getElementById('af-parent')?.value||null;
+  const p=document.getElementById('af-parent-sel')?.value||null;
   const cost=parseFloat(document.getElementById('af-cost')?.value)||0;
   const ghg=parseFloat(document.getElementById('af-ghg')?.value)||0;
   const climateType=document.getElementById('af-climate')?.value||'';
   const privateSector=document.getElementById('af-private')?.checked||false;
-  D.push({id:nid++,level:lv,code:c,title:t,desc:document.getElementById('af-desc')?.value.trim()||'',parent:p||null,status:s,owner:o,progress:0,cost,cost2035:0,cost2050:cost,pubAmt:0,prvAmt:0,mdbAmt:0,cfAmt:0,ghg,offshoreFinancing:false,regionalApproach:false,privateSector,climateFundProposal:false,climateFundType:'',noCost:false,climateType,finInstr:{pub:[],prv:[],mdb:[],pubW:[],prvW:[],mdbW:[],ppp:false,climateFund:false}});
+  const source=document.getElementById('af-source')?.value.trim()||'';
+  D.push({id:nid++,level:lv,code:c,title:t,desc:document.getElementById('af-desc')?.value.trim()||'',parent:p||null,status:s,owner:o,progress:0,cost,cost2035:0,cost2050:cost,pubAmt:0,prvAmt:0,mdbAmt:0,cfAmt:0,ghg,offshoreFinancing:false,regionalApproach:false,privateSector,climateFundProposal:false,climateFundType:'',noCost:false,climateType,source,finInstr:{pub:[],prv:[],mdb:[],pubW:[],prvW:[],mdbW:[],ppp:false,climateFund:false}});
   closeModal('m-add');
-  renderAll();
+  // Always switch to tree view and select the new item
+  const newItem = D[D.length-1];
+  const btn = document.querySelector('.vsw[onclick*="hierarchy"]');
+  setView('hierarchy', btn);
+  setTimeout(()=>{ expandAncestors(newItem); selectItem(newItem.id); }, 80);
 }
 
 function delItem(id){
