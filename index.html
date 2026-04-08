@@ -802,10 +802,16 @@ function dispMdb(d) { return isAggregate(d)?leavesOf(d).reduce((s,x)=>s+mdbAmt(x
 function dispCf(d)  { return isAggregate(d)?leavesOf(d).reduce((s,x)=>s+cfAmtOf(x),0):cfAmtOf(d); }
 function fundingGap(d){ return Math.max(0,(d.cost||0)-(d.pubAmt||0)-(d.prvAmt||0)-(d.mdbAmt||0)-cfAmtOf(d)); }
 
-function fmtCost(v){ if(v===null||v===undefined) return '—'; if(Math.abs(v)>=1000) return (v/1000).toFixed(1)+'B'; if(Math.abs(v)<1) return v.toFixed(1)+'K'; return v.toFixed(1)+'M'; }
+function fmtCost(v){ if(v===null||v===undefined) return '—'; if(Math.abs(v)>=1000) return (v/1000).toFixed(1)+'B'; return v.toFixed(1)+'M'; }
 function fmtCostK(v){ if(!v) return '0.0M'; if(Math.abs(v)<1) return (v*1000).toFixed(0)+'K'; return v.toFixed(1)+'M'; }
 function fmtGhg(v){ if(!v) return '0'; if(Math.abs(v)>=1000) return (v/1000).toFixed(1)+'Mt'; return v.toFixed(1)+' kt'; }
-function totalGhg(){ return D.filter(d=>d.level==='investment').reduce((s,d)=>s+(d.ghg||0),0); }
+function actualGhg(){
+  return D.filter(d=>d.level==='investment'&&d.status==='Complete').reduce((s,d)=>s+(d.ghg||0),0);
+}
+function potentialGhg(){
+  return D.filter(d=>d.level==='investment').reduce((s,d)=>s+(d.ghg||0),0);
+}
+function totalGhg(){ return potentialGhg(); }
 
 function costBadge(d){
   const c=dispCost(d),pub=dispPub(d),prv=dispPrv(d),mdb=dispMdb(d);
@@ -990,7 +996,7 @@ function investHtml(inv) {
         <div class="inv-desc">${inv.desc||''}</div>
         <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">
           ${costBadge(inv)}${ghgBadge(inv)}
-          ${(inv.cost2035||inv.cost2050)?`<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-family:var(--mono);font-size:9px;background:rgba(60,130,246,0.09);border:1px solid rgba(60,130,246,0.28);color:var(--goal);white-space:nowrap">📅 ${fmtCost(inv.cost2035||0)}M / ${fmtCost(inv.cost2050||0)}M</span>`:''}
+          ${(inv.cost2035||inv.cost2050)?`<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-family:var(--mono);font-size:9px;background:rgba(60,130,246,0.09);border:1px solid rgba(60,130,246,0.28);color:var(--goal);white-space:nowrap">📅 ${fmtCost(inv.cost2035||0)} / ${fmtCost(inv.cost2050||0)}</span>`:''}
           ${inv.climateFundType?`<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-family:var(--mono);font-size:9px;background:rgba(22,163,74,0.09);border:1px solid rgba(22,163,74,0.28);color:#16a34a;white-space:nowrap">🌍 ${inv.climateFundType}</span>`:''}
           ${inv.climateFundProposal?`<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-family:var(--mono);font-size:9px;background:rgba(245,158,11,0.09);border:1px solid rgba(245,158,11,0.28);color:#f59e0b;white-space:nowrap">⏳ Proposal Pending</span>`:''}
           ${inv.offshoreFinancing?`<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-family:var(--mono);font-size:9px;background:rgba(99,102,241,0.09);border:1px solid rgba(99,102,241,0.28);color:#6366f1;white-space:nowrap">🌐 Offshore</span>`:''}
@@ -1154,13 +1160,17 @@ function filterRail(raw){
 // ── DASHBOARD ─────────────────────────────────────────────────────────
 function renderDashboard(){
   const el=document.getElementById('v-dashboard'); if(!el) return;
-  const g=byLevel('sector'),a=byLevel('action'),inv=byLevel('investment'),r=byLevel('reform');
+  const g=byLevel('sector'), a=byLevel('action'), inv=byLevel('investment'), r=byLevel('reform');
   const leaves=[...inv,...r.filter(x=>!x.noCost)];
   const totCost=leaves.reduce((s,d)=>s+(d.cost||0),0);
-  const totPub=leaves.reduce((s,d)=>s+pubAmt(d),0);
-  const totPrv=leaves.reduce((s,d)=>s+prvAmt(d),0);
-  const totMdb=leaves.reduce((s,d)=>s+mdbAmt(d),0);
-  const totCf=leaves.reduce((s,d)=>s+cfAmtOf(d),0);
+  const totPub =leaves.reduce((s,d)=>s+pubAmt(d),0);
+  const totPrv =leaves.reduce((s,d)=>s+prvAmt(d),0);
+  const totMdb =leaves.reduce((s,d)=>s+mdbAmt(d),0);
+  const totCf  =leaves.reduce((s,d)=>s+cfAmtOf(d),0);
+
+  // GHG — split actual (Complete) vs potential (all)
+  const actual    = actualGhg();
+  const potential = potentialGhg();
 
   el.innerHTML=`
     <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px">
@@ -1168,7 +1178,11 @@ function renderDashboard(){
       <div class="ov-card ov-card-a"><div class="ov-n" style="color:var(--action)">${a.length}</div><div class="ov-l">Actions</div><div class="ov-s">${a.filter(x=>x.status==='In Progress').length} in progress</div></div>
       <div class="ov-card ov-card-i"><div class="ov-n" style="color:var(--invest)">${inv.length}</div><div class="ov-l">Investments</div><div class="ov-s">${fmtCost(inv.reduce((s,x)=>s+(x.cost||0),0))}</div></div>
       <div class="ov-card ov-card-r"><div class="ov-n" style="color:var(--reform)">${r.length}</div><div class="ov-l">Reforms</div><div class="ov-s">${r.filter(x=>x.status==='Draft').length} in draft</div></div>
-      <div class="ov-card" style="border-color:${GHG_LINE}"><div class="ov-n" style="color:${GHG_COL}">${fmtGhg(totalGhg())}</div><div class="ov-l" style="color:${GHG_COL}">GHG Reduced</div><div class="ov-s">${ghgGoal>0?((totalGhg()/ghgGoal)*100).toFixed(1)+'% of NDC target':'Set target below'}</div></div>
+      <div class="ov-card" style="border-color:${GHG_LINE}">
+        <div class="ov-n" style="color:${GHG_COL}">${fmtGhg(potential)}</div>
+        <div class="ov-l" style="color:${GHG_COL}">GHG Potential</div>
+        <div class="ov-s">${actual>0?fmtGhg(actual)+' realised':'0 realised'}</div>
+      </div>
     </div>
 
     <div id="dash-donuts-wrap" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:24px">
@@ -1185,13 +1199,17 @@ function renderDashboard(){
       </div>
       <div style="padding:20px 24px">
         ${(()=>{
-          const tot=totalGhg(), goal=ghgGoal||0;
-          const pct=goal>0?Math.min((tot/goal)*100,100):0;
-          const gap=goal>0?Math.max(0,goal-tot):0;
-          const pubGhg=D.filter(d=>d.level==='investment'&&!d.privateSector).reduce((s,d)=>s+(d.ghg||0),0);
-          const prvGhg=D.filter(d=>d.level==='investment'&&d.privateSector).reduce((s,d)=>s+(d.ghg||0),0);
-          const targetMet=goal>0&&tot>=goal;
-          return `<div style="display:flex;align-items:flex-start;gap:40px;margin-bottom:20px;flex-wrap:wrap">
+          const goal=ghgGoal||0;
+          const pctActual   =goal>0?Math.min((actual/goal)*100,100):0;
+          const pctPotential=goal>0?Math.min((potential/goal)*100,100):0;
+          const gap=goal>0?Math.max(0,goal-potential):0;
+          const pubActual =D.filter(d=>d.level==='investment'&&!d.privateSector&&d.status==='Complete').reduce((s,d)=>s+(d.ghg||0),0);
+          const prvActual =D.filter(d=>d.level==='investment'&&d.privateSector &&d.status==='Complete').reduce((s,d)=>s+(d.ghg||0),0);
+          const pubPotential=D.filter(d=>d.level==='investment'&&!d.privateSector).reduce((s,d)=>s+(d.ghg||0),0);
+          const prvPotential=D.filter(d=>d.level==='investment'&&d.privateSector ).reduce((s,d)=>s+(d.ghg||0),0);
+          const targetMet=goal>0&&potential>=goal;
+          return `
+          <div style="display:flex;align-items:flex-start;gap:40px;margin-bottom:20px;flex-wrap:wrap">
             <div style="min-width:260px">
               <div style="font-family:var(--mono);font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:${GHG_COL};margin-bottom:8px">NDC Emission Reduction Target</div>
               <div style="display:flex;align-items:center;gap:10px">
@@ -1202,60 +1220,86 @@ function renderDashboard(){
               </div>
               <div style="font-family:var(--mono);font-size:9px;color:var(--fog);margin-top:6px">Set your national/sectoral NDC reduction ambition</div>
             </div>
-            <div style="display:flex;gap:40px;flex:1;justify-content:flex-end;flex-wrap:wrap">
+            <div style="display:flex;gap:32px;flex:1;justify-content:flex-end;flex-wrap:wrap">
               <div style="text-align:center">
-                <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--fog);margin-bottom:4px">Identified</div>
-                <div style="font-family:var(--sans);font-size:28px;font-weight:700;color:${GHG_COL};line-height:1">${fmtGhg(tot)}</div>
-                <div style="font-family:var(--mono);font-size:9px;color:var(--fog);margin-top:2px">CO₂e/yr</div>
+                <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--fog);margin-bottom:4px">🎯 Potential</div>
+                <div style="font-family:var(--sans);font-size:26px;font-weight:700;color:${GHG_COL};line-height:1">${fmtGhg(potential)}</div>
+                <div style="font-family:var(--mono);font-size:9px;color:var(--fog);margin-top:2px">if all completed</div>
               </div>
-              ${goal>0?`<div style="text-align:center">
+              <div style="text-align:center">
+                <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--fog);margin-bottom:4px">✅ Realised</div>
+                <div style="font-family:var(--sans);font-size:26px;font-weight:700;color:${GHG_COL};line-height:1">${fmtGhg(actual)}</div>
+                <div style="font-family:var(--mono);font-size:9px;color:var(--fog);margin-top:2px">Complete only</div>
+              </div>
+              ${goal>0?`
+              <div style="text-align:center">
                 <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--fog);margin-bottom:4px">Coverage</div>
-                <div style="font-family:var(--sans);font-size:28px;font-weight:700;color:${GHG_COL};line-height:1">${pct.toFixed(1)}%</div>
-                <div style="font-family:var(--mono);font-size:9px;color:var(--fog);margin-top:2px">of target</div>
+                <div style="font-family:var(--sans);font-size:26px;font-weight:700;color:${GHG_COL};line-height:1">${pctPotential.toFixed(1)}%</div>
+                <div style="font-family:var(--mono);font-size:9px;color:var(--fog);margin-top:2px">of target (potential)</div>
               </div>
               <div style="text-align:center">
                 <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--fog);margin-bottom:4px">Gap</div>
                 ${targetMet
-                  ?`<div style="font-family:var(--sans);font-size:28px;font-weight:700;color:${GHG_COL};line-height:1">✓</div><div style="font-family:var(--mono);font-size:9px;color:${GHG_COL};margin-top:2px">target met</div>`
-                  :`<div style="font-family:var(--sans);font-size:28px;font-weight:700;color:var(--reform);line-height:1">${fmtGhg(gap)}</div><div style="font-family:var(--mono);font-size:9px;color:var(--fog);margin-top:2px">remaining</div>`}
-              </div>`:''}
+                  ?`<div style="font-family:var(--sans);font-size:26px;font-weight:700;color:${GHG_COL};line-height:1">✓</div><div style="font-family:var(--mono);font-size:9px;color:${GHG_COL};margin-top:2px">target met</div>`
+                  :`<div style="font-family:var(--sans);font-size:26px;font-weight:700;color:var(--reform);line-height:1">${fmtGhg(gap)}</div><div style="font-family:var(--mono);font-size:9px;color:var(--fog);margin-top:2px">remaining</div>`}
+              </div>`:''}`+`
             </div>
           </div>
-          ${goal>0?`<div style="height:12px;border-radius:6px;background:var(--ink4);margin-bottom:8px;overflow:hidden;display:flex;gap:1px">
-            ${pubGhg>0?`<div style="width:${Math.min(pubGhg/goal*100,100).toFixed(1)}%;background:${PUB_COL};border-radius:6px"></div>`:''}
-            ${prvGhg>0?`<div style="width:${Math.min(prvGhg/goal*100,100).toFixed(1)}%;background:${PRV_COL};border-radius:6px"></div>`:''}
+          ${goal>0?`
+          <div style="margin-bottom:4px">
+            <div style="height:8px;border-radius:6px;background:var(--ink4);overflow:hidden;position:relative">
+              <div style="position:absolute;inset:0;display:flex">
+                ${pubPotential>0?`<div style="width:${Math.min(pubPotential/goal*100,100).toFixed(1)}%;background:${PUB_COL}44;transition:width 0.4s"></div>`:''}
+                ${prvPotential>0?`<div style="width:${Math.min(prvPotential/goal*100,100).toFixed(1)}%;background:${PRV_COL}44;transition:width 0.4s"></div>`:''}
+              </div>
+              <div style="position:absolute;inset:0;display:flex">
+                ${pubActual>0?`<div style="width:${Math.min(pubActual/goal*100,100).toFixed(1)}%;background:${PUB_COL};transition:width 0.4s;border-radius:6px"></div>`:''}
+                ${prvActual>0?`<div style="width:${Math.min(prvActual/goal*100,100).toFixed(1)}%;background:${PRV_COL};transition:width 0.4s"></div>`:''}
+              </div>
+            </div>
           </div>
-          <div style="display:flex;align-items:center;gap:16px;font-family:var(--mono);font-size:9px;margin-bottom:16px">
-            <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:${PUB_COL};display:inline-block"></span><span style="color:var(--fog)">Public ${fmtGhg(pubGhg)}</span></span>
-            <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:${PRV_COL};display:inline-block"></span><span style="color:var(--fog)">Private ${prvGhg?fmtGhg(prvGhg):'—'}</span></span>
-            <span style="color:${GHG_COL};font-weight:700;margin-left:auto">${pct.toFixed(1)}% of ${fmtGhg(goal)} target</span>
-            <span style="color:var(--fog)">${fmtGhg(goal)}</span>
-          </div>`:''}
+          <div style="display:flex;align-items:center;gap:16px;font-family:var(--mono);font-size:9px;margin-bottom:16px;flex-wrap:wrap">
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:${PUB_COL};display:inline-block"></span><span style="color:var(--ghost)">Public — realised ${fmtGhg(pubActual)} / potential ${fmtGhg(pubPotential)}</span></span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:${PRV_COL};display:inline-block"></span><span style="color:var(--ghost)">Private — realised ${prvActual?fmtGhg(prvActual):'—'} / potential ${fmtGhg(prvPotential)}</span></span>
+            <span style="color:${GHG_COL};font-weight:700;margin-left:auto">${pctPotential.toFixed(1)}% potential · ${pctActual.toFixed(1)}% realised</span>
+          </div>`:''}`+`
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             ${['public','private'].map(sector=>{
               const isPublic=sector==='public';
-              const sCol=isPublic?PUB_COL:PRV_COL;
-              const sGhg=isPublic?pubGhg:prvGhg;
-              const label=isPublic?'Public Sector':'Private Sector';
-              const items=D.filter(d=>d.level==='investment'&&(isPublic?!d.privateSector:d.privateSector)&&(d.ghg||0)>0).sort((a,b)=>(b.ghg||0)-(a.ghg||0));
+              const sCol    =isPublic?PUB_COL:PRV_COL;
+              const label   =isPublic?'Public Sector':'Private Sector';
+              // All investments with GHG for this sector, ranked by GHG potential descending
+              const items=D.filter(d=>d.level==='investment'&&(isPublic?!d.privateSector:d.privateSector)&&(d.ghg||0)>0)
+                           .sort((a,b)=>(b.ghg||0)-(a.ghg||0));
+              const totalPotential=items.reduce((s,d)=>s+(d.ghg||0),0);
+              const totalActual   =items.filter(d=>d.status==='Complete').reduce((s,d)=>s+(d.ghg||0),0);
               const maxGhg=items.length?(items[0].ghg||0):1;
               return `<div style="background:var(--ink3);border:1px solid var(--line);border-radius:8px;padding:14px 16px">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
                   <span style="width:8px;height:8px;border-radius:50%;background:${sCol};display:inline-block"></span>
                   <span style="font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:${sCol}">${label}</span>
-                  <span style="margin-left:auto;font-family:var(--sans);font-size:16px;font-weight:700;color:${GHG_COL}">${fmtGhg(sGhg)} CO₂e</span>
+                </div>
+                <div style="display:flex;gap:16px;margin-bottom:12px;font-family:var(--mono);font-size:10px">
+                  <span style="color:${GHG_COL}">🎯 ${fmtGhg(totalPotential)} potential</span>
+                  <span style="color:var(--mist)">✅ ${fmtGhg(totalActual)} realised</span>
                 </div>
                 ${items.length===0
                   ?`<div style="font-family:var(--mono);font-size:10px;color:var(--fog);text-align:center;padding:12px 0;font-style:italic">No reductions entered yet</div>`
                   :items.map(it=>{
                     const bW=maxGhg>0?((it.ghg||0)/maxGhg*100).toFixed(1):0;
+                    const isComplete=it.status==='Complete';
+                    const barCol=isComplete?sCol:sCol+'66';
+                    const statusTag=isComplete
+                      ?`<span style="font-family:var(--mono);font-size:8px;padding:1px 5px;border-radius:4px;background:${GHG_COL}22;color:${GHG_COL}">✅ realised</span>`
+                      :`<span style="font-family:var(--mono);font-size:8px;padding:1px 5px;border-radius:4px;background:var(--ink4);color:var(--fog)">🎯 ${it.status}</span>`;
                     return `<div style="margin-bottom:10px">
-                      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px">
-                        <span onclick="navigateTo(${it.id})" style="font-family:var(--mono);font-size:9px;font-weight:600;color:${sCol};cursor:pointer;text-decoration:underline;text-decoration-style:dotted">${it.code}</span>
-                        <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--white)">${fmtGhg(it.ghg||0)}</span>
+                      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;gap:6px">
+                        <span onclick="navigateTo(${it.id})" style="font-family:var(--mono);font-size:9px;font-weight:600;color:${sCol};cursor:pointer;text-decoration:underline;text-decoration-style:dotted;flex-shrink:0">${it.code}</span>
+                        ${statusTag}
+                        <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${isComplete?'var(--white)':GHG_COL};margin-left:auto">${fmtGhg(it.ghg||0)}</span>
                       </div>
                       <div style="font-family:var(--serif);font-size:11px;font-style:italic;color:var(--fog);margin-bottom:3px;line-height:1.3">${it.title}</div>
-                      <div style="height:3px;border-radius:2px;background:var(--ink4)"><div style="height:100%;border-radius:2px;background:${sCol};width:${bW}%"></div></div>
+                      <div style="height:3px;border-radius:2px;background:var(--ink4)"><div style="height:100%;border-radius:2px;background:${barCol};width:${bW}%;transition:width 0.3s"></div></div>
                     </div>`;
                   }).join('')}
               </div>`;
@@ -1294,12 +1338,12 @@ function renderDashboard(){
       ${byLevel('sector').map(sec=>{
         const secLeaves=sectorLeaves(sec.code);
         const secCost=secLeaves.reduce((s,x)=>s+(x.cost||0),0);
-        const secPub=secLeaves.reduce((s,x)=>s+pubAmt(x),0);
-        const secPrv=secLeaves.reduce((s,x)=>s+prvAmt(x),0);
-        const secMdb=secLeaves.reduce((s,x)=>s+mdbAmt(x),0);
-        const funded=secPub+secPrv+secMdb;
-        const pct3=secCost>0?Math.min((funded/secCost)*100,100).toFixed(0):0;
-        const acts=chActions(sec.code).length;
+        const secPub =secLeaves.reduce((s,x)=>s+pubAmt(x),0);
+        const secPrv =secLeaves.reduce((s,x)=>s+prvAmt(x),0);
+        const secMdb =secLeaves.reduce((s,x)=>s+mdbAmt(x),0);
+        const funded =secPub+secPrv+secMdb;
+        const pct3   =secCost>0?Math.min((funded/secCost)*100,100).toFixed(0):0;
+        const acts   =chActions(sec.code).length;
         return `<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line)">
           <span style="font-family:var(--mono);font-size:9px;font-weight:600;padding:2px 8px;border-radius:8px;background:var(--goal-dim);color:var(--goal);min-width:36px;text-align:center">${sec.code}</span>
           <span style="font-family:var(--sans);font-size:12px;color:var(--ghost);flex:1">${sec.title}</span>
@@ -1317,7 +1361,6 @@ function renderDashboard(){
   setTimeout(renderDonuts, 0);
 }
 
-
 function renderDonuts(){
   const leaves=D.filter(d=>d.level==='investment'||d.level==='reform');
   const totCost=leaves.reduce((s,d)=>s+(d.cost||0),0);
@@ -1334,8 +1377,13 @@ function renderDonuts(){
      items:[{l:'Public',v:totPub,c:'#6ab4ff'},{l:'Private',v:totPrv,c:'#f4c06a'},{l:'MDBs/DFIs',v:totMdb,c:'#4dd9ac'},{l:'Clim. Funds',v:totCf,c:'#34d399'},{l:'Unallocated',v:unalloc,c:'#64748b'}].filter(x=>x.v>0.001)},
     {title:'Climate Goal',unit:'USD M',
      items:[{l:'Mitigation',v:D.filter(d=>d.level==='investment'&&d.climateType==='Mitigation').reduce((s,x)=>s+(x.cost||0),0),c:'#60a5fa'},{l:'Adaptation',v:D.filter(d=>d.level==='investment'&&d.climateType==='Adaptation').reduce((s,x)=>s+(x.cost||0),0),c:'#34d399'},{l:'Both',v:D.filter(d=>d.level==='investment'&&d.climateType==='Adaptation & Mitigation').reduce((s,x)=>s+(x.cost||0),0),c:'#a78bfa'},{l:'Not specified',v:D.filter(d=>d.level==='investment'&&!d.climateType).reduce((s,x)=>s+(x.cost||0),0),c:'#94a3b8'}].filter(x=>x.v>0.001)},
-    {title:'GHG Savings',unit:'kt CO\u2082e',
-     items:[{l:'Public sector',v:pubGhg,c:'#6ab4ff'},{l:'Private sector',v:prvGhg,c:'#f4c06a'}].filter(x=>x.v>0.001)},
+    {title:'GHG Savings (potential)',unit:'kt CO\u2082e',
+     items:[
+       {l:'Public — realised', v:D.filter(d=>d.level==='investment'&&!d.privateSector&&d.status==='Complete').reduce((s,d)=>s+(d.ghg||0),0),c:'#6ab4ff'},
+       {l:'Public — potential',v:D.filter(d=>d.level==='investment'&&!d.privateSector&&d.status!=='Complete').reduce((s,d)=>s+(d.ghg||0),0),c:'#6ab4ff55'},
+       {l:'Private — realised',v:D.filter(d=>d.level==='investment'&&d.privateSector&&d.status==='Complete').reduce((s,d)=>s+(d.ghg||0),0),c:'#f4c06a'},
+       {l:'Private — potential',v:D.filter(d=>d.level==='investment'&&d.privateSector&&d.status!=='Complete').reduce((s,d)=>s+(d.ghg||0),0),c:'#f4c06a55'},
+     ].filter(x=>x.v>0.001)},
   ];
 
   datasets.forEach(function(ds,idx){
@@ -1726,32 +1774,32 @@ function renderFinancing(){
               </div>
             </td>
             <td style="padding:10px 12px;text-align:right;vertical-align:top">
-              <div style="font-family:var(--sans);font-size:16px;font-weight:700;color:var(--white);white-space:nowrap">${fmtCost(tot)}<span style="font-size:9px;color:var(--fog)">M</span></div>
+              <div style="font-family:var(--sans);font-size:16px;font-weight:700;color:var(--white);white-space:nowrap">${fmtCost(tot)}</div>
               <input type="number" min="0" step="0.1" value="${tot||''}" onchange="const item=D.find(x=>x.id==${d.id});if(item){item.cost=parseFloat(this.value)||0;item.cost2050=item.cost2050||parseFloat(this.value)||0;refreshFinance(${d.id})}"
                 style="width:70px;font-family:var(--mono);font-size:8px;padding:2px 5px;border:1px solid var(--line);border-radius:4px;background:var(--ink3);color:var(--ghost);outline:none;margin-top:4px;text-align:right">
             </td>
             <td style="padding:10px 12px;text-align:right;vertical-align:top">
-              ${c35?`<div style="font-family:var(--sans);font-size:16px;font-weight:700;color:${PUB_COL};white-space:nowrap">${fmtCost(c35)}<span style="font-size:9px;color:var(--fog)">M</span></div>
+              ${c35?`<div style="font-family:var(--sans);font-size:16px;font-weight:700;color:${PUB_COL};white-space:nowrap">${fmtCost(c35)}</div>
               <div style="height:3px;border-radius:2px;background:var(--ink4);width:60px;margin:4px 0 2px auto"><div style="height:100%;border-radius:2px;background:${PUB_COL};width:${pct35}%"></div></div>
               <div style="font-family:var(--mono);font-size:8px;color:var(--fog)">${pct35}%</div>`
               :`<span style="color:var(--fog)">—</span>`}
             </td>
             <td style="padding:10px 12px;text-align:right;vertical-align:top">
-              ${c50?`<div style="font-family:var(--sans);font-size:16px;font-weight:700;color:${PUB_COL}88;white-space:nowrap">${fmtCost(c50)}<span style="font-size:9px;color:var(--fog)">M</span></div>
+              ${c50?`<div style="font-family:var(--sans);font-size:16px;font-weight:700;color:${PUB_COL}88;white-space:nowrap">${fmtCost(c50)}</div>
               <div style="height:3px;border-radius:2px;background:var(--ink4);width:60px;margin:4px 0 2px auto"><div style="height:100%;border-radius:2px;background:${PUB_COL}88;width:${pct50}%"></div></div>
               <div style="font-family:var(--mono);font-size:8px;color:var(--fog)">${pct50}%</div>`
               :`<span style="color:var(--fog)">—</span>`}
             </td>
             <td style="padding:10px 12px;vertical-align:top;background:rgba(99,149,255,0.03)">
-              <div style="font-family:var(--sans);font-size:14px;font-weight:700;color:${PUB_COL};margin-bottom:6px">${fmtCost(pub)}M</div>
+              <div style="font-family:var(--sans);font-size:14px;font-weight:700;color:${PUB_COL};margin-bottom:6px">${fmtCost(pub)}</div>
               ${instrDropdowns(d,'pub')}
             </td>
             <td style="padding:10px 12px;vertical-align:top;background:rgba(245,192,106,0.03)">
-              <div style="font-family:var(--sans);font-size:14px;font-weight:700;color:${PRV_COL};margin-bottom:6px">${fmtCost(prv)}M</div>
+              <div style="font-family:var(--sans);font-size:14px;font-weight:700;color:${PRV_COL};margin-bottom:6px">${fmtCost(prv)}</div>
               ${instrDropdowns(d,'prv')}
             </td>
             <td style="padding:10px 12px;vertical-align:top;background:rgba(77,217,172,0.03)">
-              <div style="font-family:var(--sans);font-size:14px;font-weight:700;color:${MDB_COL};margin-bottom:6px">${fmtCost(mdb)}M</div>
+              <div style="font-family:var(--sans);font-size:14px;font-weight:700;color:${MDB_COL};margin-bottom:6px">${fmtCost(mdb)}</div>
               ${instrDropdowns(d,'mdb')}
             </td>
             <td style="padding:8px 10px;vertical-align:top;text-align:center;background:rgba(139,92,246,0.03)">
@@ -1866,68 +1914,118 @@ function renderSchemes(){
   const el=document.getElementById('v-schemes'); if(!el) return;
   const allItems=D.filter(d=>d.level==='investment'||d.level==='reform');
   const enabledCount=FS.filter(fs=>schemeEnabled(fs)).length;
+
   const schemeCards=FS.map(fs=>{
     const active=schemeEnabled(fs);
-    const accentCol=active?'#0d9488':'var(--fog)';
-    const accentDim=active?'rgba(13,148,136,0.07)':'var(--ink2)';
-    const accentLine=active?'rgba(13,148,136,0.28)':'var(--line)';
-    const condsMet=fs.conditions.filter(conditionMet).length;
-    const condRows=fs.conditions.map((cond,idx)=>{
-      const met=conditionMet(cond);
-      const linkedItem=cond.itemCode?D.find(d=>d.code===cond.itemCode):null;
-      const lv=linkedItem?.level; const lvCol=lv?COL[lv]:'var(--fog)';
-      return `<div style="display:flex;align-items:center;gap:8px;padding:4px 8px;background:var(--ink);border:1px solid ${met?'rgba(13,148,136,0.25)':'var(--line)'};border-radius:6px;margin-bottom:4px">
-        <div style="width:7px;height:7px;border-radius:50%;background:${met?'#0d9488':'var(--fog)'};flex-shrink:0"></div>
-        <div style="flex:1;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          <select onchange="fsSetConditionCode(${fs.id},${idx},this.value)" style="font-family:var(--mono);font-size:9px;padding:3px 7px;border:1px solid var(--line);border-radius:4px;background:var(--ink3);color:${cond.itemCode?lvCol:'var(--fog)'};outline:none;max-width:200px">
+    const accentCol  = active ? '#0d9488' : 'var(--mist)';
+    const accentDim  = active ? 'rgba(13,148,136,0.07)' : 'var(--ink2)';
+    const accentLine = active ? 'rgba(13,148,136,0.28)' : 'var(--line)';
+    const condsMet   = fs.conditions.filter(conditionMet).length;
+
+    const condRows = fs.conditions.map((cond,idx)=>{
+      const met       = conditionMet(cond);
+      const linkedItem= cond.itemCode ? D.find(d=>d.code===cond.itemCode) : null;
+      const lv        = linkedItem?.level;
+      const lvCol     = lv ? COL[lv] : 'var(--mist)';
+      return `<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--ink);border:1px solid ${met?'rgba(13,148,136,0.25)':'var(--line)'};border-radius:6px;margin-bottom:6px">
+        <div style="width:8px;height:8px;border-radius:50%;background:${met?'#0d9488':'var(--fog)'};flex-shrink:0"></div>
+        <div style="flex:1;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <select onchange="fsSetConditionCode(${fs.id},${idx},this.value)"
+            style="font-family:var(--mono);font-size:11px;padding:4px 8px;border:1px solid var(--line);border-radius:4px;background:var(--ink3);color:${cond.itemCode?lvCol:'var(--mist)'};outline:none;max-width:220px">
             <option value="">— Select item —</option>
             ${allItems.map(it=>`<option value="${it.code}" ${cond.itemCode===it.code?'selected':''}>${it.code} — ${it.title.slice(0,30)}</option>`).join('')}
           </select>
-          <span style="font-family:var(--mono);font-size:9px;color:var(--fog)">reaches</span>
-          <select onchange="fsSetConditionStatus(${fs.id},${idx},this.value)" style="font-family:var(--mono);font-size:9px;padding:3px 7px;border:1px solid var(--line);border-radius:4px;background:var(--ink3);color:${met?'#0d9488':'var(--ghost)'};outline:none">
+          <span style="font-family:var(--mono);font-size:11px;color:var(--mist)">reaches</span>
+          <select onchange="fsSetConditionStatus(${fs.id},${idx},this.value)"
+            style="font-family:var(--mono);font-size:11px;padding:4px 8px;border:1px solid var(--line);border-radius:4px;background:var(--ink3);color:${met?'#0d9488':'var(--ghost)'};outline:none">
             ${FS_STATUSES.map(s=>`<option value="${s}" ${cond.requiredStatus===s?'selected':''}>${s}</option>`).join('')}
           </select>
-          ${linkedItem?`<span style="font-family:var(--mono);font-size:8px;padding:1px 6px;border-radius:4px;background:${DIM[linkedItem.level]};color:${STATUS_COLOR(linkedItem.status)}">now: ${linkedItem.status}</span>`:''}
+          ${linkedItem?`<span style="font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:4px;background:${DIM[linkedItem.level]};color:${STATUS_COLOR(linkedItem.status)}">now: ${linkedItem.status}</span>`:''}
         </div>
-        <button onclick="fsRemoveCondition(${fs.id},${idx})" style="font-size:11px;color:var(--fog);background:none;border:none;cursor:pointer;padding:0 4px;opacity:0.5" onmouseenter="this.style.opacity='1';this.style.color='#e05'" onmouseleave="this.style.opacity='0.5';this.style.color='var(--fog)'">✕</button>
+        <button onclick="fsRemoveCondition(${fs.id},${idx})"
+          style="font-size:13px;color:var(--fog);background:none;border:none;cursor:pointer;padding:0 4px;opacity:0.5"
+          onmouseenter="this.style.opacity='1';this.style.color='#e05'"
+          onmouseleave="this.style.opacity='0.5';this.style.color='var(--fog)'">✕</button>
       </div>`;
     }).join('');
-    return `<div style="background:${accentDim};border:1px solid ${accentLine};border-radius:var(--r);margin-bottom:8px;overflow:hidden">
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid ${accentLine}">
-        <div onclick="fsToggle(${fs.id})" style="width:28px;height:16px;border-radius:8px;background:${active?'#0d9488':'var(--ink4)'};position:relative;cursor:pointer;flex-shrink:0;border:1px solid ${accentLine}">
-          <div style="width:10px;height:10px;border-radius:50%;background:var(--white);position:absolute;top:2px;left:${active?'15':'3'}px;box-shadow:0 1px 3px rgba(0,0,0,0.3)"></div>
+
+    return `<div style="background:${accentDim};border:1px solid ${accentLine};border-radius:var(--r);margin-bottom:10px;overflow:hidden">
+
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid ${accentLine}">
+        <div onclick="fsToggle(${fs.id})"
+          style="width:32px;height:18px;border-radius:9px;background:${active?'#0d9488':'var(--ink4)'};position:relative;cursor:pointer;flex-shrink:0;border:1px solid ${accentLine}">
+          <div style="width:12px;height:12px;border-radius:50%;background:var(--white);position:absolute;top:2px;left:${active?'17':'3'}px;box-shadow:0 1px 3px rgba(0,0,0,0.3);transition:left 0.15s"></div>
         </div>
-        <input value="${fs.title.replace(/"/g,'&quot;')}" onchange="fsSetField(${fs.id},'title',this.value)" style="flex:1;font-family:var(--serif);font-style:italic;font-size:13px;color:var(--white);background:transparent;border:none;outline:none;border-bottom:1px solid transparent" onfocus="this.style.borderBottomColor='var(--fog)'" onblur="this.style.borderBottomColor='transparent'">
-        <select onchange="fsSetField(${fs.id},'category',this.value)" style="font-family:var(--mono);font-size:9px;padding:3px 8px;border:1px solid var(--line);border-radius:6px;background:var(--ink3);color:${accentCol};outline:none">
+        <input value="${fs.title.replace(/"/g,'&quot;')}" onchange="fsSetField(${fs.id},'title',this.value)"
+          style="flex:1;font-family:var(--serif);font-style:italic;font-size:15px;color:var(--white);background:transparent;border:none;outline:none;border-bottom:1px solid transparent"
+          onfocus="this.style.borderBottomColor='var(--fog)'"
+          onblur="this.style.borderBottomColor='transparent'">
+        <select onchange="fsSetField(${fs.id},'category',this.value)"
+          style="font-family:var(--mono);font-size:11px;padding:4px 10px;border:1px solid var(--line);border-radius:6px;background:var(--ink3);color:${accentCol};outline:none">
           ${FS_CATEGORIES.map(cat=>`<option value="${cat}" ${fs.category===cat?'selected':''}>${cat}</option>`).join('')}
         </select>
         <div style="display:flex;gap:2px;background:var(--ink);border:1px solid var(--line);border-radius:6px;padding:2px;flex-shrink:0">
-          ${[{v:'public',l:'🏛 Public',c:PUB_COL},{v:'private',l:'🏦 Private',c:PRV_COL},{v:'both',l:'⚡ Both',c:'#a78bfa'},{v:'',l:'—',c:'var(--fog)'}].map(opt=>`<button onclick="fsSetField(${fs.id},'fundingType','${opt.v}');renderSchemes()" style="font-family:var(--mono);font-size:8px;padding:2px 8px;border-radius:4px;border:none;cursor:pointer;background:${(fs.fundingType||'')=== opt.v?opt.c+'22':'transparent'};color:${(fs.fundingType||'')=== opt.v?opt.c:'var(--fog)'};" title="${opt.l}">${opt.l}</button>`).join('')}
+          ${[{v:'public',l:'🏛 Public',c:PUB_COL},{v:'private',l:'🏦 Private',c:PRV_COL},{v:'both',l:'⚡ Both',c:'#a78bfa'},{v:'',l:'—',c:'var(--mist)'}].map(opt=>
+            `<button onclick="fsSetField(${fs.id},'fundingType','${opt.v}');renderSchemes()"
+              style="font-family:var(--mono);font-size:10px;padding:3px 9px;border-radius:4px;border:none;cursor:pointer;background:${(fs.fundingType||'')=== opt.v?opt.c+'22':'transparent'};color:${(fs.fundingType||'')=== opt.v?opt.c:'var(--mist)'}"
+              title="${opt.l}">${opt.l}</button>`
+          ).join('')}
         </div>
-        <span style="font-family:var(--mono);font-size:9px;font-weight:600;padding:3px 10px;border-radius:10px;background:${active?'rgba(13,148,136,0.15)':'var(--ink4)'};color:${accentCol};border:1px solid ${accentLine};white-space:nowrap">${active?'● ENABLED':'○ DISABLED'}</span>
-        <button onclick="fsDelete(${fs.id})" style="font-size:12px;color:var(--fog);background:none;border:none;cursor:pointer;padding:0 4px;opacity:0.4" onmouseenter="this.style.opacity='1';this.style.color='#e05'" onmouseleave="this.style.opacity='0.4';this.style.color='var(--fog)'" title="Delete">✕</button>
+        <span style="font-family:var(--mono);font-size:10px;font-weight:600;padding:4px 12px;border-radius:10px;background:${active?'rgba(13,148,136,0.15)':'var(--ink4)'};color:${accentCol};border:1px solid ${accentLine};white-space:nowrap">
+          ${active?'● ENABLED':'○ DISABLED'}
+        </span>
+        <button onclick="fsDelete(${fs.id})"
+          style="font-size:14px;color:var(--fog);background:none;border:none;cursor:pointer;padding:0 4px;opacity:0.4"
+          onmouseenter="this.style.opacity='1';this.style.color='#e05'"
+          onmouseleave="this.style.opacity='0.4';this.style.color='var(--fog)'"
+          title="Delete">✕</button>
       </div>
-      <div style="padding:8px 12px">
-        <textarea onchange="fsSetField(${fs.id},'desc',this.value)" rows="1" style="width:100%;font-family:var(--sans);font-size:11px;color:var(--ghost);background:transparent;border:none;border-bottom:1px solid var(--line);outline:none;resize:none;margin-bottom:6px;padding-bottom:3px;line-height:1.4;box-sizing:border-box" placeholder="Description…">${(fs.desc||'').replace(/</g,'&lt;')}</textarea>
-        ${active&&fs.fundingType?`<div style="font-family:var(--mono);font-size:8px;color:${fs.fundingType==='public'?PUB_COL:fs.fundingType==='private'?PRV_COL:'#a78bfa'};margin-bottom:6px">✓ Injected into ${fs.fundingType==='public'?'🏛 Public':fs.fundingType==='private'?'🏦 Private':'🏛 Public + 🏦 Private'} instrument dropdowns</div>`:''}
-        <div style="font-family:var(--mono);font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:var(--fog);margin-bottom:5px">Enabling Conditions ${fs.conditions.length>0?`<span style="color:${condsMet===fs.conditions.length?'#0d9488':'var(--fog)'}"> · ${condsMet}/${fs.conditions.length} met</span>`:''}</div>
+
+      <div style="padding:10px 14px">
+        <textarea onchange="fsSetField(${fs.id},'desc',this.value)" rows="1"
+          style="width:100%;font-family:var(--sans);font-size:12px;color:var(--ghost);background:transparent;border:none;border-bottom:1px solid var(--line);outline:none;resize:none;margin-bottom:8px;padding-bottom:4px;line-height:1.5;box-sizing:border-box"
+          placeholder="Description…">${(fs.desc||'').replace(/</g,'&lt;')}</textarea>
+
+        ${active&&fs.fundingType?`<div style="font-family:var(--mono);font-size:10px;color:${fs.fundingType==='public'?PUB_COL:fs.fundingType==='private'?PRV_COL:'#a78bfa'};margin-bottom:8px">
+          ✓ Injected into ${fs.fundingType==='public'?'🏛 Public':fs.fundingType==='private'?'🏦 Private':'🏛 Public + 🏦 Private'} instrument dropdowns
+        </div>`:''}
+
+        <div style="font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--mist);margin-bottom:6px">
+          Enabling Conditions
+          ${fs.conditions.length>0?`<span style="color:${condsMet===fs.conditions.length?'#0d9488':'var(--mist)'}"> · ${condsMet}/${fs.conditions.length} met</span>`:''}
+        </div>
         ${condRows}
-        <button onclick="fsAddCondition(${fs.id})" style="font-family:var(--mono);font-size:9px;color:#0d9488;background:rgba(13,148,136,0.05);border:1px dashed rgba(13,148,136,0.28);border-radius:5px;padding:3px 10px;cursor:pointer;margin-top:2px" onmouseenter="this.style.background='rgba(13,148,136,0.12)'" onmouseleave="this.style.background='rgba(13,148,136,0.05)'">＋ Add enabling condition</button>
+        <button onclick="fsAddCondition(${fs.id})"
+          style="font-family:var(--mono);font-size:11px;color:#0d9488;background:rgba(13,148,136,0.05);border:1px dashed rgba(13,148,136,0.28);border-radius:5px;padding:4px 12px;cursor:pointer;margin-top:4px"
+          onmouseenter="this.style.background='rgba(13,148,136,0.12)'"
+          onmouseleave="this.style.background='rgba(13,148,136,0.05)'">＋ Add enabling condition</button>
       </div>
     </div>`;
   }).join('');
 
   el.innerHTML=`
-    <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:4px">
-      <div style="font-family:var(--serif);font-size:22px;font-style:italic;color:var(--white)">Financing Schemes</div>
-      <div style="font-family:var(--mono);font-size:11px;color:var(--fog)">enablement linked to reforms & investments</div>
+    <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:6px">
+      <div style="font-family:var(--serif);font-size:28px;font-style:italic;color:var(--white)">Financing Schemes</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--mist)">enablement linked to reforms & investments</div>
     </div>
-    <div style="font-family:var(--mono);font-size:9px;color:var(--fog);margin-bottom:12px"><span style="color:${enabledCount>0?'#0d9488':'var(--fog)'};font-weight:600">${enabledCount}</span> of ${FS.length} schemes currently enabled</div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
-      ${FS_CATEGORIES.map(cat=>{const n=FS.filter(fs=>fs.category===cat).length;if(!n)return'';const en=FS.filter(fs=>fs.category===cat&&schemeEnabled(fs)).length;return`<div style="background:var(--ink2);border:1px solid ${en>0?'rgba(13,148,136,0.3)':'var(--line)'};border-radius:20px;padding:2px 10px;font-family:var(--mono);font-size:8px;color:${en>0?'#0d9488':'var(--fog)'}">${cat} · ${en}/${n}</div>`;}).join('')}
+    <div style="font-family:var(--mono);font-size:11px;color:var(--mist);margin-bottom:14px">
+      <span style="color:${enabledCount>0?'#0d9488':'var(--mist)'};font-weight:700">${enabledCount}</span> of ${FS.length} schemes currently enabled
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+      ${FS_CATEGORIES.map(cat=>{
+        const n=FS.filter(fs=>fs.category===cat).length;
+        if(!n) return '';
+        const en=FS.filter(fs=>fs.category===cat&&schemeEnabled(fs)).length;
+        return `<div style="background:var(--ink2);border:1px solid ${en>0?'rgba(13,148,136,0.3)':'var(--line)'};border-radius:20px;padding:3px 12px;font-family:var(--mono);font-size:10px;color:${en>0?'#0d9488':'var(--mist)'}">
+          ${cat} · ${en}/${n}
+        </div>`;
+      }).join('')}
     </div>
     ${schemeCards}
-    <button onclick="fsAdd()" style="width:100%;font-family:var(--mono);font-size:10px;color:#0d9488;background:rgba(13,148,136,0.05);border:1px dashed rgba(13,148,136,0.28);border-radius:var(--r);padding:10px;cursor:pointer;margin-top:4px" onmouseenter="this.style.background='rgba(13,148,136,0.1)'" onmouseleave="this.style.background='rgba(13,148,136,0.05)'">＋ Add Financing Scheme</button>
+    <button onclick="fsAdd()"
+      style="width:100%;font-family:var(--mono);font-size:11px;color:#0d9488;background:rgba(13,148,136,0.05);border:1px dashed rgba(13,148,136,0.28);border-radius:var(--r);padding:12px;cursor:pointer;margin-top:4px"
+      onmouseenter="this.style.background='rgba(13,148,136,0.1)'"
+      onmouseleave="this.style.background='rgba(13,148,136,0.05)'">＋ Add Financing Scheme</button>
   `;
 }
 
@@ -2317,10 +2415,18 @@ function confirmAdd(){
   const source=document.getElementById('af-source')?.value.trim()||'';
   D.push({id:nid++,level:lv,code:c,title:t,desc:document.getElementById('af-desc')?.value.trim()||'',parent:p||null,status:s,owner:o,progress:0,cost,cost2035:0,cost2050:cost,pubAmt:0,prvAmt:0,mdbAmt:0,cfAmt:0,ghg,offshoreFinancing:false,regionalApproach:false,privateSector,climateFundProposal:false,climateFundType:'',noCost:false,climateType,source,finInstr:{pub:[],prv:[],mdb:[],pubW:[],prvW:[],mdbW:[],ppp:false,climateFund:false}});
   closeModal('m-add');
-  // Always switch to tree view and select the new item
+  // Render the updated tree, switch to hierarchy, expand to and select the new item
   const newItem = D[D.length-1];
   const btn = document.querySelector('.vsw[onclick*="hierarchy"]');
-  setView('hierarchy', btn);
+  // Always re-render hierarchy regardless of current view
+  curView='hierarchy';
+  document.querySelectorAll('.vsw').forEach(b=>b.classList.remove('on'));
+  if(btn) btn.classList.add('on');
+  document.getElementById('v-hierarchy').className='vcanvas on';
+  document.getElementById('drail').style.display='';
+  renderHierarchy();
+  renderRail();
+  updateStatus();
   setTimeout(()=>{ expandAncestors(newItem); selectItem(newItem.id); }, 80);
 }
 
