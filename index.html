@@ -2094,6 +2094,12 @@ function efInvFinInstrWeight(id,source,idx,val){const d=byId(id);if(!d)return;en
 function efInvFinInstr(id,source,idx,val){const d=byId(id);if(!d)return;ensureFinInstr(d);d.finInstr[source][idx]=val;if(curView==='pubfin')renderPublicFinancing();}
 function efInvFinAdd(id,source){const d=byId(id);if(!d)return;ensureFinInstr(d);d.finInstr[source].push('—');d.finInstr[source+'W'].push('');renderDetail();if(curView==='pubfin')renderPublicFinancing();}
 function efInvFinCheck(id,field,val){const d=byId(id);if(!d)return;ensureFinInstr(d);d.finInstr[field]=val;if(curView==='pubfin')renderPublicFinancing();}
+
+// efFin* — used by instrDropdowns in the financing table (re-renders financing view)
+function efFinInstr(id,source,idx,val){const d=byId(id);if(!d)return;ensureFinInstr(d);d.finInstr[source][idx]=val;renderFinancing();if(curView==='pubfin')renderPublicFinancing();}
+function efFinInstrWeight(id,source,idx,val){const d=byId(id);if(!d)return;ensureFinInstr(d);d.finInstr[source+'W'][idx]=val;}
+function efFinAdd(id,source){const d=byId(id);if(!d)return;ensureFinInstr(d);d.finInstr[source].push('—');d.finInstr[source+'W'].push('');renderFinancing();if(curView==='pubfin')renderPublicFinancing();}
+function efFinCheck(id,field,val){const d=byId(id);if(!d)return;ensureFinInstr(d);d.finInstr[field]=val;renderFinancing();if(curView==='pubfin')renderPublicFinancing();}
 function ef(id,field,val){const d=byId(id);if(d){d[field]=val;refreshFinance(id);}}
 function efGhg(id,v){const d=byId(id);if(d){d.ghg=parseFloat(v)||0;refreshFinance(id);}}
 
