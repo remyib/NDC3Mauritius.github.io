@@ -815,6 +815,24 @@ const chDirectInvests = actionCode => D.filter(d=>
 // Investments parented to an action that list reformCode as an enabling reform
 // Reforms that appear under actionCode via an alias code
 // (not their canonical parent, but they list an alias like R{s}.{n}*)
+// For a reform rendered under an alias code, split its investments into:
+//   local  — investments whose code prefix matches the alias action (e.g. I3.2*)
+//   remote — all other investments (belong to canonical or other aliased sector)
+const chInvestsForAlias = (reformCode, aliasCode) => {
+  // Investments may be parented to the canonical code (reformCode)
+  // OR to the alias code — both are valid and must be collected.
+  const all = D.filter(d =>
+    d.level === 'investment' &&
+    (d.parent === reformCode || d.parent === aliasCode)
+  ).sort(codeSort);
+  // Split: local = parented to aliasCode (or whose code prefix matches alias)
+  const numPart = aliasCode ? aliasCode.replace(/^[A-Za-z]+/,'') : '';
+  const localPrefix = 'I' + numPart;
+  const local  = all.filter(d => d.parent === aliasCode || d.code.startsWith(localPrefix));
+  const remote = all.filter(d => d.parent !== aliasCode && !d.code.startsWith(localPrefix));
+  return { local, remote };
+};
+
 const chAliasedReforms = actionCode => {
   const numPart = actionCode.replace(/^[A-Za-z]+/,''); // e.g. "3.2" from "A3.2"
   const aliasPrefix = 'R' + numPart;                   // e.g. "R3.2"
@@ -1050,19 +1068,19 @@ function actionHtml(a) {
 }
 
 function reformHtml(r, aliasCode) {
-  // Direct investments (parent === r.code) + conditional investments that list r.code
-  const directInvs=chInvests(r.code);
-  const conditionalInvs=chConditionalInvests(r.code);
-  // Merge, deduplicate by id
-  const allInvs=[...directInvs, ...conditionalInvs.filter(ci=>!directInvs.find(di=>di.id===ci.id))];
-  // When rendered as a cross-reference alias, show alias code and suppress cost
   const isAlias = !!aliasCode;
+  // Primary view: only investments parented to the canonical code (r.code)
+  // Alias view: only investments parented to the alias code — handled via chInvestsForAlias
+  const directInvs = chInvests(r.code);
+  const conditionalInvs = chConditionalInvests(r.code);
+  const allInvs = [...directInvs, ...conditionalInvs.filter(ci=>!directInvs.find(di=>di.id===ci.id))];
+  // When rendered as a cross-reference alias, show alias code and suppress cost
   const displayCode = isAlias ? aliasCode : r.code;
   const otherCodes = isAlias
     ? [`${r.code}`, ...(r.aliases||[]).filter(a=>a!==aliasCode)]
     : (r.aliases||[]);
   return `<div class="ref-blk">
-    <div class="ref-card" onclick="toggleChildren('rc-${r.id}',${r.id})" style="${isAlias?'border-style:dashed;opacity:0.9':''}">
+    <div class="ref-card" onclick="toggleChildren('rc-${r.id}${isAlias?'-'+aliasCode:''}',${r.id})" style="${isAlias?'border-style:dashed;opacity:0.9':''}">
       <div class="lbadge">
         <span class="lcode" style="background:var(--reform-dim);color:var(--reform)">${displayCode}</span>
         ${otherCodes.map(a=>`<span class="lcode" style="background:var(--reform-dim);color:var(--reform);opacity:0.7;font-size:8px">${a}</span>`).join('')}
@@ -1079,26 +1097,57 @@ function reformHtml(r, aliasCode) {
               ?`<span style="display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:10px;font-family:var(--mono);font-size:9px;background:rgba(234,179,8,0.10);border:1px solid rgba(234,179,8,0.30);color:#b45309;white-space:nowrap">⭐ No financial cost</span>`
               :costBadge(r)}
           ${ghgBadge(r)}
-          ${allInvs.length?`<span class="mpill" style="background:var(--invest-dim);color:var(--invest);font-size:8px">${allInvs.length} inv.</span>`:''}
+          ${(()=>{
+            if(!isAlias){
+              // Primary view: canonical count + total alias-parented across all aliases
+              const aliasTotal=(r.aliases||[]).reduce((s,a)=>s+D.filter(d=>d.level==='investment'&&d.parent===a).length,0);
+              const total=allInvs.length+aliasTotal;
+              if(!total) return '';
+              return `<span class="mpill" style="background:var(--invest-dim);color:var(--invest);font-size:8px">${allInvs.length} inv.${aliasTotal?` + ${aliasTotal} mirrored`:''}</span>`;
+            }
+            const {local,remote}=chInvestsForAlias(r.code,aliasCode);
+            const tot=local.length+remote.length;
+            if(!tot) return '';
+            return `<span class="mpill" style="background:var(--invest-dim);color:var(--invest);font-size:8px">${local.length} local${remote.length?` + ${remote.length} other`:''}</span>`;
+          })()}
         </div>
       </div>
       <div class="cmeta" style="gap:5px">
         <span class="mpill" style="background:var(--reform-dim);color:${STATUS_COLOR(r.status)}">${r.status}</span>
       </div>
     </div>
-    <div class="inv-ch" id="rc-${r.id}" style="padding-left:14px">
+    <div class="inv-ch" id="rc-${r.id}${isAlias?'-'+aliasCode:''}" style="padding-left:14px">
       <div style="padding:6px 0 2px" onclick="event.stopPropagation()">
-        <div style="${r.noCost?'opacity:0.35;pointer-events:none':''}">
-        ${finWidget(r,'small')}
+        <div style="${(!isAlias&&r.noCost)?'opacity:0.35;pointer-events:none':''}">
+        ${isAlias?'':finWidget(r,'small')}
         </div>
       </div>
-      ${allInvs.map(inv=>{
-        const isCond=Array.isArray(inv.enablingReforms)&&inv.enablingReforms.includes(r.code);
-        try{
-          return investHtml(inv, isCond ? r.code : null);
-        }catch(e){return `<div style="color:#f87171;font-size:9px;padding:4px">[Error: ${inv.code} — ${e.message}]</div>`;}
-      }).join('')}
-      <button class="add-child-btn" style="color:var(--invest);border-color:var(--invest-line)" onclick="openAdd('investment','${r.code}')">＋ Add Investment</button>
+      ${(()=>{
+        if(isAlias){
+          // Show only investments whose code prefix matches this alias action
+          const {local, remote} = chInvestsForAlias(r.code, aliasCode);
+          const remoteNote = remote.length
+            ? `<div style="font-family:var(--mono);font-size:9px;color:var(--fog);padding:4px 0 6px">
+                ↗ ${remote.length} investment${remote.length>1?'s':''} also under <strong>${r.code}</strong> (other sector)
+               </div>`
+            : '';
+          return local.map(inv=>{
+            const isCond=Array.isArray(inv.enablingReforms)&&inv.enablingReforms.includes(r.code);
+            try{ return investHtml(inv, isCond?r.code:null); }
+            catch(e){ return `<div style="color:#f87171;font-size:9px;padding:4px">[Error: ${inv.code}]</div>`; }
+          }).join('') + remoteNote;
+        } else {
+          return allInvs.map(inv=>{
+            const isCond=Array.isArray(inv.enablingReforms)&&inv.enablingReforms.includes(r.code);
+            try{ return investHtml(inv, isCond?r.code:null); }
+            catch(e){ return `<div style="color:#f87171;font-size:9px;padding:4px">[Error: ${inv.code}]</div>`; }
+          }).join('');
+        }
+      })()}
+      <button class="add-child-btn" style="color:var(--invest);border-color:var(--invest-line)"
+        onclick="openAdd('investment','${isAlias ? (()=>{ const numPart=aliasCode.replace(/^[A-Za-z]+/,''); return D.find(d=>d.level==='action'&&d.code==='A'+numPart)?.code||r.code; })() : r.code}')">
+        ＋ Add Investment
+      </button>
     </div>
   </div>`;
 }
@@ -2578,7 +2627,20 @@ function renderDetail(){
           const candidates =
             lv==='action'      ? byLevel('sector').sort(codeSort)
             : lv==='reform'    ? byLevel('action').sort(codeSort)
-            : lv==='investment'? [...byLevel('action'),...byLevel('reform')].sort(codeSort)
+            : lv==='investment'? (()=>{
+                const reforms = byLevel('reform');
+                // For each reform that has aliases, add a virtual entry per alias code
+                // so the user can pick the mirrored reform from the alias sector.
+                const aliasEntries = reforms.flatMap(r =>
+                  (r.aliases||[]).map(a => ({
+                    id: r.id, level:'reform',
+                    code: a,
+                    title: r.title + ' ↗ alias of ' + r.code,
+                    parent: r.parent
+                  }))
+                );
+                return [...byLevel('action'), ...reforms, ...aliasEntries].sort(codeSort);
+              })()
             : [];
           if(!candidates.length) return '';
           const aliasSection = lv==='reform' ? `
@@ -2795,7 +2857,18 @@ function openAdd(lv,parentCode){
     : lv==='reform'
       ? byLevel('action').sort(codeSort)
       : lv==='investment'
-        ? [...byLevel('action'), ...byLevel('reform')].sort(codeSort)
+        ? (()=>{
+            const reforms = byLevel('reform');
+            const aliasEntries = reforms.flatMap(r =>
+              (r.aliases||[]).map(a => ({
+                id: r.id, level:'reform',
+                code: a,
+                title: r.title + ' ↗ alias of ' + r.code,
+                parent: r.parent
+              }))
+            );
+            return [...byLevel('action'), ...reforms, ...aliasEntries].sort(codeSort);
+          })()
         : [];
 
   const parentHtml = parentCandidates.length ? `
